@@ -1,5 +1,6 @@
-package es.netmind.mypersonalbankapi.controladores;
+package es.netmind.mypersonalbankapi.controllersAPI;
 
+import es.netmind.mypersonalbankapi.controladores.IClientesController;
 import es.netmind.mypersonalbankapi.exceptions.ClienteNotFoundException;
 import es.netmind.mypersonalbankapi.modelos.clientes.Cliente;
 import es.netmind.mypersonalbankapi.modelos.clientes.Empresa;
@@ -42,7 +43,6 @@ import java.util.List;
 /* Como usuario del sistema, quiero poder modificar los datos de un cliente para mantenerlos      */
 /* actualizados.                                                                                  */
 /* Borrar cliente por Id                                                                          */
-
 /**************************************************************************************************/
 @RestController
 @RequestMapping("/clientes")
