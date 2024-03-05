@@ -2,7 +2,9 @@ package es.netmind.mypersonalbankapi.controllersAPI;
 
 import es.netmind.mypersonalbankapi.controladores.PrestamosController;
 import es.netmind.mypersonalbankapi.exceptions.PrestamoNotFoundException;
+import es.netmind.mypersonalbankapi.modelos.clientes.Cliente;
 import es.netmind.mypersonalbankapi.modelos.prestamos.Prestamo;
+import es.netmind.mypersonalbankapi.persistencia.IClientesRepoData;
 import es.netmind.mypersonalbankapi.persistencia.IPrestamosRepoData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,16 +14,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Min;
+import java.util.ArrayList;
 import java.util.List;
 
 /**************************************************************************************************/
@@ -38,6 +40,7 @@ import java.util.List;
 /* HISTORIA DE USUARIO 9                                                                          */
 /* Como usuario del sistema, quiero poder evaluar una solicitud de préstamo de cliente, para      */
 /* decidir si lo concedemos o no.                                                                 */
+
 /**************************************************************************************************/
 @RestController
 @RequestMapping("/prestamos")
@@ -50,7 +53,10 @@ public class PrestamosControllerAPI {
     private IPrestamosRepoData prestamosRepo;
 
     @Autowired
-    private PrestamosController prestamosController;
+    private IClientesRepoData clientesRepo;
+
+//    @Autowired
+//    private PrestamosController prestamosController;
 
     // Método GET (Obtener Préstamos 'getPrestamos')
     @Operation(summary = "Get all loans", description = "Returns all loans from the application")
@@ -59,7 +65,7 @@ public class PrestamosControllerAPI {
             @ApiResponse(responseCode = "404", description = "Not found - The loan was not found")
     })
     @GetMapping(value = "", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<Prestamo>>getPrestamos() throws PrestamoNotFoundException {
+    public ResponseEntity<List<Prestamo>> getPrestamos() throws PrestamoNotFoundException {
         List<Prestamo> prestamos = prestamosRepo.findAll();
         if (prestamos != null && prestamos.size() > 0)
             return new ResponseEntity<>(prestamosRepo.findAll(), HttpStatus.OK); // HTTP 200
@@ -81,20 +87,107 @@ public class PrestamosControllerAPI {
 //    ) {
 //        try {
 //            return ResponseEntity.status(HttpStatus.OK).body(prestamosController.mostrarDetalle(id)); // HTTP 200
-//        } catch (ClienteNotFoundException e) {
+//        } catch (PrestamoNotFoundException e) {
 //            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // HTTP 404
 //        }
 //        /* La excepción de cliente no encontrado NO se controla aquí, sino en el método mostrarDetalleCliente() de ClientesController. Es la forma más correcta de implementarlo para evitar el anidamiento de if-else. */
 //    }
     /* MÉTODO EQUIVALENTE (if-else), controlando la excepción en la propia clase 'PrestamosControllerAPI.java' */
-    public ResponseEntity<Prestamo> getCliente(
+    public ResponseEntity<Prestamo> getPrestamo(
             @Parameter(name = "id", description = "Prestamo id", example = "1", required = true)
             @PathVariable @Min(1) Integer id
     ) throws Exception {
         Prestamo prestamo = prestamosRepo.findPrestamoById(id);
         if (prestamo != null && prestamo.validar())
             return new ResponseEntity<>(prestamosRepo.findPrestamoById(id), HttpStatus.OK); // HTTP 200
-        //else return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            //else return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         else throw new PrestamoNotFoundException(id); // HTTP 404 + Excepción: 'Cliente con id: X no encontrado'
     }
+
+
+    // Método GET (Como usuario del sistema, quiero poder ver la lista de préstamos de un cliente para entender su estado de deuda.)
+    // URL: http://localhost:9980/prestamos/getPrestamosByCliente/{cid}
+    @Operation(summary = "Get all loans by client", description = "Returns all loans by client from the application")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Not found - The loan was not found")
+    })
+    @GetMapping(value = "/getPrestamosByCliente/{cid}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<List<Prestamo>> getPrestamosByCliente(
+            @Parameter(name = "cid", description = "Prestamo cid", example = "1", required = true)
+            @PathVariable @Min(1) Integer cid
+    ) throws Exception {
+//        List<Prestamo> prestamosByClienteList = new ArrayList<>();
+//        List<Prestamo> prestamosList = prestamosRepo.findAll().forEach((p) -> {
+//            if (p.getId() != cid) {
+//                prestamosByClienteList = prestamosList.remove(p);
+//            }
+//        });
+
+
+//        System.out.println("cid = " + cid);
+//        List<Prestamo> prestamosList = prestamosRepo.findAll();
+//        List<Prestamo> prestamosByClienteList = new ArrayList<>();
+//        if (prestamosList != null && prestamosList.size() > 0) {
+//            for (Prestamo p : prestamosList) {
+//                System.out.println("p.getId() = " + p.getId());
+//                if (p.getMyCliente().getId() == cid) {
+//                    prestamosByClienteList.add(p);
+//                }
+//            }
+//        }
+
+        // Método 1 (recuperando cliente y devolviendo su lista de préstamos asociados)
+//        Cliente cliente = clientesRepo.findClienteById(cid);
+//        System.out.println("CLIENTE=" + cliente);
+//        List<Prestamo> prestamosByClienteList = cliente.getPrestamos();
+        // Método 2 (mediante query SQL)
+        List<Prestamo> prestamosByClienteList = prestamosRepo.getPrestamosByCliente(cid);
+
+        if (prestamosByClienteList != null && prestamosByClienteList.size() > 0)
+            return new ResponseEntity<>(prestamosByClienteList, HttpStatus.OK); // HTTP 200
+            //else return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        else
+            throw new PrestamoNotFoundException("La lista de préstamos del cliente " + cid + " está vacía: " + prestamosByClienteList); // HTTP 404 + Excepción: La lista de préstamos está vacía: []
+    }
+
+
+    // Método DELETE (Borrar Préstamo por ID 'delete')
+    @Operation(summary = "Delete a loan by id", description = "Removes a loan as per the id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "No Content"),
+            @ApiResponse(responseCode = "404", description = "Not Found - The loan was not found"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteId(
+            @Parameter(name = "id", description = "Cliente id", example = "1", required = true)
+            @PathVariable @Min(1) Integer id
+    ) {
+        try {
+            this.prestamosRepo.deleteById(id); // HTTP 204 No Content
+            return ResponseEntity.noContent().build();
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // HTTP 404 Not Found
+        }
+    }
+
+
+    // Método DELETE (Borrar Todos los Préstamos 'deleteAll')
+    /* En el caso de un DELETE operación, en realidad ya no estás devolviendo una entidad; simplemente estás confirmando que el recurso ya no existe. Como DELETE es idempotente (puede eliminar el registro varias veces), puede devolver el mismo código de estado independientemente de si el registro existe o devolver un 404 si no se encuentra el registro. */
+    @Operation(summary = "Delete all loans", description = "Removes all loans from the application")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "No Content"),
+            @ApiResponse(responseCode = "404", description = "Not Found - The loans was not found")
+    })
+    @RequestMapping(value = "", method = RequestMethod.DELETE)
+    public ResponseEntity deleteAll() {
+        // Devuelve HTTP 204 en el caso de borrar una lista de clientes. Si la lista está vacía devuelve un HTTP 404.
+        if (prestamosRepo.count() > 0) {
+            this.prestamosRepo.deleteAll(); // HTTP 204 No Content
+            return ResponseEntity.noContent().build();
+        } else
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // HTTP 404 Not Found
+    }
+
 }

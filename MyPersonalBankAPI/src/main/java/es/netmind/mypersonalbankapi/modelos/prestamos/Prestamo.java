@@ -22,7 +22,7 @@ public class Prestamo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Min(1)
-    @Schema(name = "Cliente ID", example = "1", required = false)
+    @Schema(name = "Préstamo ID", example = "1", required = false)
     private Integer id;
 
     @Column(name = "fecha_concesion")
@@ -69,8 +69,9 @@ public class Prestamo {
     private boolean liquidado;
 
     @ManyToOne(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
-    @JoinColumn(name = "cliente_id")
+    @JoinColumn(name = "cliente_id") // Foreign Key
     @ToString.Exclude   //Evitar bucles infinitos
+    @Schema(name = "Préstamo myCliente (foreing key)", type = "Cliente", required = true)
     private Cliente myCliente;
 
     /* CONSTRUCTOR */

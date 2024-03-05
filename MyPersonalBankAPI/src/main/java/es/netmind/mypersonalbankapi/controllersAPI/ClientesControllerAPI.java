@@ -80,10 +80,12 @@ public class ClientesControllerAPI {
     @Operation(summary = "Get a client by id", description = "Returns a client as per the id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
-            @ApiResponse(responseCode = "404", description = "Not Found - The client was not found")
+            @ApiResponse(responseCode = "404", description = "Not Found - The client was not found"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity")
     })
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Cliente> getCliente(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Client data")
             @Parameter(name = "id", description = "Cliente id", example = "1", required = true)
             @PathVariable @Min(1) Integer id
     ) {
@@ -137,11 +139,14 @@ public class ClientesControllerAPI {
     @Operation(summary = "Update a Personal client by id", description = "Update a Personal client selected by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Accepted"),
-            @ApiResponse(responseCode = "412", description = "Precondition Failed")
+            @ApiResponse(responseCode = "404", description = "Not Found - The Personal client was not found"),
+            @ApiResponse(responseCode = "412", description = "Precondition Failed"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity")
     })
     @PutMapping("/personal/{id}")
     public ResponseEntity<Personal> update(
             @PathVariable @Min(1) Integer id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Personal data")
             @RequestBody @Valid Personal personal
     ) throws ClienteNotFoundException {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(clientesController.updatePersonal(id, personal));
@@ -153,21 +158,25 @@ public class ClientesControllerAPI {
     @Operation(summary = "Update a Empresa client by id", description = "Update a Empresa client selected by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Accepted"),
-            @ApiResponse(responseCode = "412", description = "Precondition Failed")
+            @ApiResponse(responseCode = "404", description = "Not Found - The Empresa client was not found"),
+            @ApiResponse(responseCode = "412", description = "Precondition Failed"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity")
     })
     @PutMapping("/empresa/{id}")
     public ResponseEntity<Empresa> update(
             @PathVariable @Min(1) Integer id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Empresa data")
             @RequestBody @Valid Empresa empresa
     ) throws ClienteNotFoundException {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(clientesController.updateEmpresa(id, empresa));
     }
 
-    // Método DELETE (Borrar Cuenta por ID 'delete')
+    // Método DELETE (Borrar Cliente por ID 'delete')
     @Operation(summary = "Delete a client by id", description = "Removes a client as per the id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "404", description = "Not Found - The client was not found")
+            @ApiResponse(responseCode = "404", description = "Not Found - The client was not found"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Entity")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity deleteId(
@@ -183,11 +192,12 @@ public class ClientesControllerAPI {
         }
     }
 
-    // Método DELETE (Borrar Todas las Cuentas 'deleteAll')
+    // Método DELETE (Borrar Todos los Clientes 'deleteAll')
     /* En el caso de un DELETE operación, en realidad ya no estás devolviendo una entidad; simplemente estás confirmando que el recurso ya no existe. Como DELETE es idempotente (puede eliminar el registro varias veces), puede devolver el mismo código de estado independientemente de si el registro existe o devolver un 404 si no se encuentra el registro. */
     @Operation(summary = "Delete all clients", description = "Removes all clients from the application")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "No Content")
+            @ApiResponse(responseCode = "204", description = "No Content"),
+            @ApiResponse(responseCode = "404", description = "Not Found - The clients was not found")
     })
     @RequestMapping(value = "", method = RequestMethod.DELETE)
     public ResponseEntity deleteAll() {

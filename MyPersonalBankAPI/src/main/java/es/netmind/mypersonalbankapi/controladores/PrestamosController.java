@@ -1,13 +1,12 @@
 package es.netmind.mypersonalbankapi.controladores;
 
+import es.netmind.mypersonalbankapi.exceptions.ErrorCode;
 import es.netmind.mypersonalbankapi.exceptions.PrestamoException;
 import es.netmind.mypersonalbankapi.modelos.clientes.Cliente;
 import es.netmind.mypersonalbankapi.modelos.prestamos.Prestamo;
-import es.netmind.mypersonalbankapi.persistencia.ClientesInMemoryRepo;
-import es.netmind.mypersonalbankapi.persistencia.IClientesRepo;
-import es.netmind.mypersonalbankapi.persistencia.IPrestamosRepo;
-import es.netmind.mypersonalbankapi.persistencia.PrestamosInMemoryRepo;
+import es.netmind.mypersonalbankapi.persistencia.*;
 import lombok.ToString;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;

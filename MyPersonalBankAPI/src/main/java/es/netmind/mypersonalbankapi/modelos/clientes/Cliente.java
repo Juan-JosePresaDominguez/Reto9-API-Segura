@@ -59,6 +59,7 @@ public abstract class Cliente {
     //@OneToMany(cascade = {CascadeType.ALL}, mappedBy = "myCliente")
     @Schema(name = "Cliente cuentas", type = "List<Cuenta>", required = false)
     private List<Cuenta> cuentas;
+
     //@Transient
     @JsonIgnore
     @OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER, mappedBy = "myCliente")
